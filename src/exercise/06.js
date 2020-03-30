@@ -61,25 +61,27 @@ function createPokemonResource(pokemonName) {
   return {data, image}
 }
 
-function App() {
-  const [pokemonName, setPokemonName] = React.useState('')
-  // 🐨 move these two lines to a custom hook called usePokemonResource
-
-  // 🐨 call usePokemonResource with the pokemonName.
-  //    It should return both the pokemonResource and isPending
+const usePokemonResource = (pokemonName) => {
   const [startTransition, isPending] = React.useTransition(SUSPENSE_CONFIG)
   const [pokemonResource, setPokemonResource] = React.useState(null)
+  
+  React.useEffect(() => {
+    if (!pokemonName) {
+      return
+    }
+    startTransition(() => {
+      setPokemonResource(getPokemonResource(pokemonName))
+    })
+  }, [pokemonName, startTransition])
+  return [pokemonResource, isPending]
+}
 
+function App() {
+  const [pokemonName, setPokemonName] = React.useState('')
+  const [pokemonResource, isPending] = usePokemonResource(pokemonName)
+  
   function handleSubmit(newPokemonName) {
     setPokemonName(newPokemonName)
-    // 🐨 move this startTransition call to a useLayoutEffect inside your
-    //    custom usePokemonResource hook (it should list pokemonName as a
-    //    dependency).
-    startTransition(() => {
-      setPokemonResource(getPokemonResource(newPokemonName))
-    })
-    // 💰 tip: in your effect callback, if pokemonName is an empty string,
-    //    return early.
   }
 
   return (
