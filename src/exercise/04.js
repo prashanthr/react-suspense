@@ -40,11 +40,20 @@ const SUSPENSE_CONFIG = {
 }
 
 // 🐨 create a pokemonResourceCache object
-
+const pokemonResourceCache = {}
 // 🐨 create a getPokemonResource function which accepts a name checks the cache
 // for an existing resource. If there is none, then it creates a resource
 // and inserts it into the cache. Finally the function should return the
 // resource.
+const getPokemonResource = (name) => {
+  let resource = pokemonResourceCache[name]
+  if (!resource) {
+    console.warn(`Item not in cache for ${name}...`)
+    resource = createPokemonResource(name)
+    pokemonResourceCache[name] = resource 
+  }
+  return resource
+}
 
 function createPokemonResource(pokemonName) {
   return createResource(() => fetchPokemon(pokemonName))
@@ -58,8 +67,7 @@ function App() {
   function handleSubmit(newPokemonName) {
     setPokemonName(newPokemonName)
     startTransition(() => {
-      // 🐨 change this to getPokemonResource instead
-      setPokemonResource(createPokemonResource(newPokemonName))
+      setPokemonResource(getPokemonResource(newPokemonName))
     })
   }
 
