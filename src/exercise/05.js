@@ -8,8 +8,9 @@ import {
   createResource,
   PokemonInfoFallback,
   PokemonForm,
-  PokemonDataView,
+  PokemonDataView
 } from '../utils'
+import { getImageUrlForPokemon } from '../../src/fetch-pokemon'
 
 // By default, all fetches are mocked so we can control the time easily.
 // You can adjust the fetch time with this:
@@ -26,7 +27,7 @@ import {
 
 // we need to make a place to store the resources outside of render so
 // 🐨 create "cache" object here.
-
+const imgSrcResourceCache = {}
 // 🐨 create an Img component that renders a regular <img /> and accepts a src
 // prop and forwards on any remaining props.
 // 🐨 The first thing you do in this component is check wither your
@@ -36,13 +37,35 @@ import {
 // 💰 Here's what rendering the <img /> should look like:
 // <img src={imgSrcResource.read()} {...props} />
 
+function preloadImage(src) {
+  return new Promise(resolve => {
+    const img = document.createElement('img')
+    img.src = src
+    img.onload = () => resolve(src)
+  })
+}
+
+const Img = ({ src, alt, ...props }) => {
+  let imgResource = imgSrcResourceCache[src]
+  if (!imgResource) {
+    imgResource = createResource(() => preloadImage(src))
+    imgSrcResourceCache[src] = imgResource
+  }
+  return (
+    <img 
+      {...props}
+      alt={alt}
+      src={imgResource.read()}
+    />
+  )
+}
+
 function PokemonInfo({pokemonResource}) {
   const pokemon = pokemonResource.read()
   return (
     <div>
       <div className="pokemon-info__img-wrapper">
-        {/* 🐨 swap this img for your new Img component */}
-        <img src={pokemon.image} alt={pokemon.name} />
+        <Img name={pokemon.name} src={pokemon.image} alt={pokemon.name} />
       </div>
       <PokemonDataView pokemon={pokemon} />
     </div>
