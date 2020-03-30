@@ -34,6 +34,16 @@ const fallback = (
 )
 const SUSPENSE_CONFIG = {timeoutMs: 4000}
 
+const SuspenseInception = ({ items, revealOrder }) => (
+  <React.SuspenseList revealOrder={revealOrder}>
+  {items.map((item, idx) => (
+    <React.Suspense key={idx} fallback={item.fallback || fallback}>
+      {item.component}
+    </React.Suspense>
+  ))}
+  </React.SuspenseList>  
+)
+
 function App() {
   const [startTransition] = React.useTransition(SUSPENSE_CONFIG)
   const [pokemonResource, setPokemonResource] = React.useState(null)
@@ -60,24 +70,46 @@ function App() {
   // 🐨 Use React.SuspenseList throughout these Suspending components to make
   // them load in a way that is not jaring to the user.
   // 💰 there's not really a specifically "right" answer for this.
+  const suspenseInnerNavItems = [{
+    component: <LeftNav />
+  }, {
+    component: <RightNav pokemonResource={pokemonResource} />
+  }]
+
+  const suspenseFinalItems = [{
+    component: (
+      <SuspenseInception 
+        revealOrder={'together'}
+        items={suspenseInnerNavItems}
+      />
+    )
+  }, {
+    component: (
+      <MainContent pokemonResource={pokemonResource} />
+    )
+  }]
+
+  const suspenseRootItems = [{
+    component: <NavBar pokemonResource={pokemonResource} />
+  }, {
+    component: (
+      <div className={cn.mainContentArea}>
+        <SuspenseInception 
+          items={suspenseFinalItems}
+          revealOrder={'forwards'}
+        />
+      </div>
+    )
+  }]
+
   return (
     <div className="pokemon-info-app">
       <div className={cn.root}>
         <ErrorBoundary>
-          <React.Suspense fallback={fallback}>
-            <NavBar pokemonResource={pokemonResource} />
-          </React.Suspense>
-          <div className={cn.mainContentArea}>
-            <React.Suspense fallback={fallback}>
-              <LeftNav />
-            </React.Suspense>
-            <React.Suspense fallback={fallback}>
-              <MainContent pokemonResource={pokemonResource} />
-            </React.Suspense>
-            <React.Suspense fallback={fallback}>
-              <RightNav pokemonResource={pokemonResource} />
-            </React.Suspense>
-          </div>
+          <SuspenseInception 
+            items={suspenseRootItems} 
+            revealOrder={'forwards'} 
+          />
         </ErrorBoundary>
       </div>
     </div>
